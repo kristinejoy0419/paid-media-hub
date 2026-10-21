@@ -221,7 +221,30 @@ if(!S||!S.markets)S=exampleState();
 if(!S.formats)S.formats=defaultFormats();if(!S.formats._video)S.formats._video={lengths:'15s, 30s'};if(S.landing==null)S.landing='https://example.com/';if(!S.copy)S.copy=exampleCopy();if(S.copy.eyebrow==null&&S.copy.src===EX_NAME)S.copy.eyebrow=exampleCopy().eyebrow;if(S.copy.src==null&&S.name===EX_NAME)S.copy.src=S.name;
 let UI={tier:1,tab:'summary',group:'channel',mvp:'master'};
 try{Object.assign(UI,JSON.parse(localStorage.getItem(LSKEY+'-ui')||'{}'))}catch(e){}
-function save(){try{localStorage.setItem(LSKEY,JSON.stringify(S));localStorage.setItem(LSKEY+'-ui',JSON.stringify(UI))}catch(e){}}
+// Projects: every plan lives in a library in this browser; the open one autosaves. Backups are one JSON file with every project.
+const PJKEY=LSKEY+'-projects';
+const pjAll=()=>{try{return JSON.parse(localStorage.getItem(PJKEY)||'{}')||{}}catch(e){return {}}};
+const pjPut=P=>{try{localStorage.setItem(PJKEY,JSON.stringify(P));return true}catch(e){return false}};
+const pjId=()=>'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+let PJ_ERR=false;
+function save(){try{localStorage.setItem(LSKEY,JSON.stringify(S));localStorage.setItem(LSKEY+'-ui',JSON.stringify(UI))}catch(e){}
+ if(UI.pj){const P=pjAll();if(P[UI.pj]){P[UI.pj].S=S;P[UI.pj].saved=Date.now();PJ_ERR=!pjPut(P);const h=document.getElementById('pj-hint');if(h)h.textContent=PJ_ERR?'browser storage full: download a backup':'saved '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}}}
+(function pjEnsure(){const P=pjAll();if(!UI.pj||!P[UI.pj]){const id=pjId();P[id]={name:S.name||'My first plan',S,saved:Date.now()};UI.pj=id;pjPut(P);try{localStorage.setItem(LSKEY+'-ui',JSON.stringify(UI))}catch(e){}}})();
+function pjOpen(id){const P=pjAll();if(!P[id])return;try{localStorage.setItem(LSKEY,JSON.stringify(P[id].S));UI.pj=id;localStorage.setItem(LSKEY+'-ui',JSON.stringify(UI))}catch(e){}location.reload()}
+function renderProjects(){const P=pjAll(),ids=Object.keys(P).sort((a,b)=>(P[b].saved||0)-(P[a].saved||0));
+ $('#pj-sel').innerHTML=ids.map(id=>`<option value="${id}" ${id===UI.pj?'selected':''}>${esc(P[id].name||'Untitled plan')}</option>`).join('');
+ $('#pj-name').value=P[UI.pj]?.name||'';$('#pj-del').disabled=ids.length<2}
+function wireProjects(){
+ $('#pj-sel').onchange=e=>{save();pjOpen(e.target.value)};
+ $('#pj-name').oninput=e=>{const P=pjAll();if(P[UI.pj]){P[UI.pj].name=e.target.value.trim()||'Untitled plan';pjPut(P);const o=$('#pj-sel').querySelector(`option[value="${UI.pj}"]`);if(o)o.textContent=P[UI.pj].name}};
+ $('#pj-new').onclick=()=>{save();const P=pjAll(),id=pjId();P[id]={name:'New plan '+new Date().toLocaleDateString(),S:blankState(),saved:Date.now()};if(!pjPut(P))return setStatus('#pj-status','Browser storage is full. Download a backup, then delete an old project.',true);pjOpen(id)};
+ $('#pj-copy').onclick=()=>{save();const P=pjAll(),id=pjId();P[id]={name:(P[UI.pj]?.name||'Plan')+' (copy)',S:JSON.parse(JSON.stringify(S)),saved:Date.now()};if(!pjPut(P))return setStatus('#pj-status','Browser storage is full. Download a backup, then delete an old project.',true);UI.pj=id;save();renderProjects();setStatus('#pj-status','Copy saved. You are now working in the copy; rename it above.')};
+ $('#pj-del').onclick=()=>{const P=pjAll(),n=P[UI.pj]?.name||'this project';if(Object.keys(P).length<2||!confirm('Delete “'+n+'”? Download a backup first if you might want it back.'))return;delete P[UI.pj];pjPut(P);const next=Object.keys(P).sort((a,b)=>(P[b].saved||0)-(P[a].saved||0))[0];UI.pj=null;pjOpen(next)};
+ $('#pj-export').onclick=()=>{save();const d=new Date().toISOString().slice(0,10);saveFile('paid-media-hub-projects-'+d+'.json',JSON.stringify({app:'paid-media-hub',version:1,exported:new Date().toISOString(),projects:pjAll()},null,1))};
+ $('#pj-file').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const j=JSON.parse(await f.text()),inc=j&&j.projects;if(!inc||typeof inc!=='object')throw 0;
+   const P=pjAll();let n=0,m=0;for(const [id,pr] of Object.entries(inc)){if(!pr||!pr.S||!pr.S.markets)continue;if(P[id]&&JSON.stringify(P[id].S)===JSON.stringify(pr.S)){m++;continue}const k=P[id]?pjId():id;P[k]={name:pr.name||'Imported plan',S:pr.S,saved:pr.saved||Date.now()};n++}
+   if(!n&&!m)throw 0;if(!pjPut(P))return setStatus('#pj-status','Browser storage is full, so the backup could not be opened. Delete an old project first.',true);renderProjects();setStatus('#pj-status',n?`Opened the backup: ${n} project${n>1?'s':''} added to your list${m?` (${m} already here)`:''}. Pick one above.`:'Everything in that backup is already in your list.')}
+  catch(err){setStatus('#pj-status','That file isn’t a Paid Media Hub backup.',true)}e.target.value=''}}
 
 /* ==================== HELPERS ==================== */
 const $=s=>document.querySelector(s);
@@ -581,6 +604,10 @@ function renderGrowth(R){const G=gr(),o=funnel(R),E=econ(R,o),mo=outcomes(R),cap
  const gb=[0,1,2].map(t=>({t,o:funnel(compute(t)),b:+S.budgets[TIERS[t]]||0})),need=goalBudget(R.tier);
  const goalTxt=v=>G.goalType==='pipe'?money(v):compact(v);
  const S3=[['Conservative','Leads 30% under plan, pipeline rates 15% worse',0.7,0.85],['Expected','Benchmarks as planned',1,1],['Strong','Leads 25% over plan, pipeline rates 10% better',1.25,1.1]].map(([n,d,k,pk])=>{const x=scen(o,k,pk);return {n,d,x,e:econ(R,x)}});
+ const FIXES=[['CPL above target 2 weeks running','Move budget to the lowest-CPL channel, refresh creative (ad fatigue shows after 3–4 weeks), tighten targeting and exclusions, and test lead gen forms against the landing page.'],
+  ['Landing page conversion under plan','Cut the form to 3–5 fields, match the page headline to the ad, add customer logos and proof up top, and A/B test the offer (demo vs report vs calculator).'],
+  ['Sales rejecting more than 40% of MQLs','Re-agree the MQL definition with sales, add one or two qualifying questions to forms, exclude students, job seekers and tiny companies, and follow up within an hour.'],
+  ['Deals stalling past the normal sales cycle','Retarget open opportunities with case studies, ROI proof and competitor comparisons, reach the whole buying committee with ABM, and give sales a follow-up content kit.']];
  const SENS=[['CPL 20% higher (fewer leads)',scen(o,1/1.2,1)],['Visit → lead 20% lower',scen(o,0.8,1)],['MQL → SQL 5 pts lower',(()=>{const P=pipe(),f=Math.max(0,P.sql-0.05)/P.sql;const mql=o.leads*P.mql,sql=mql*P.sql*f;return {...o,mql,sql,cust:sql*P.win}})()],['SQL → customer 5 pts lower',(()=>{const P=pipe(),f=Math.max(0,P.win-0.05)/P.win;return {...o,cust:o.cust*f}})()]];
  const byC={};R.lines.forEach(l=>{const f=lineFun(l),b=byC[l.c.id]=byC[l.c.id]||{c:l.c,spend:0,leads:0};b.spend+=l.budget;if(f)b.leads+=f.leads});
  const satRows=Object.values(byC).sort((a,b)=>b.spend-a.spend).map(b=>{const eff=satF(b.c.id,b.spend),lin=eff?b.leads/eff:0,next=b.spend+10000,nl=lin*(next/b.spend)*satF(b.c.id,next),ml=nl-b.leads;
@@ -609,9 +636,9 @@ function renderGrowth(R){const G=gr(),o=funnel(R),E=econ(R,o),mo=outcomes(R),cap
   <tr class="tot"><td>Budget needed (${esc(TIERNAME[R.tier])} mix)</td><td class="n">${need&&need.budget?money(need.budget):'Not reachable with this mix'}</td><td class="n">${goalTxt(G.goal)} ${gl}</td><td class="n">${need&&need.budget?money(need.budget*(1+G.agency/100)+(+G.creative)+(+G.tools))+' all-in':''}</td></tr></tbody></table></div></div>
 
  <div style="display:flex;flex-direction:column;gap:18px"><div><h2 style="font-size:18px">Range of outcomes</h2><div class="tscroll"><table><thead><tr><th>Case</th><th class="n">Leads</th><th class="n">SQLs</th><th class="n">Customers</th><th class="n">Pipeline</th><th class="n">CAC (all-in)</th><th class="n">Payback</th></tr></thead><tbody>
-  ${S3.map(s=>`<tr${s.n==='Expected'?' class="tot"':''}><td>${s.n}<div class="sub2">${s.d}</div></td><td class="n">${compact(s.x.leads)}</td><td class="n">${compact(s.x.sql)}</td><td class="n">${compact(s.x.cust)}</td><td class="n">${money(s.e.pipeline)}</td><td class="n">${s.x.cust?money(s.e.cacF):'—'}</td><td class="n">${s.e.payback?Math.round(s.e.payback)+' mo':'—'}</td></tr>`).join('')}</tbody></table></div></div>
-  <div><h2 style="font-size:18px">What if one number slips</h2><div class="tscroll"><table><thead><tr><th>If…</th><th class="n">Customers</th><th class="n">CAC (all-in)</th><th class="n">Change</th></tr></thead><tbody>
-  ${SENS.map(([n,x])=>{const e=econ(R,x);return `<tr><td>${n}</td><td class="n">${compact(x.cust)}</td><td class="n">${x.cust?money(e.cacF):'—'}</td><td class="n">${E.cacF&&e.cacF?'+'+Math.round((e.cacF/E.cacF-1)*100)+'% CAC':'—'}</td></tr>`}).join('')}</tbody></table></div></div></div>
+  ${S3.map(s=>`<tr${s.n==='Expected'?' class="tot"':''}><td>${s.n}<div class="sub2">${s.d}</div></td><td class="n">${compact(s.x.leads)}</td><td class="n">${compact(s.x.sql)}</td><td class="n">${compact(s.x.cust)}</td><td class="n">${money(s.e.pipeline)}</td><td class="n">${s.x.cust?money(s.e.cacF):'—'}</td><td class="n">${s.e.payback?Math.round(s.e.payback)+' mo':'—'}</td></tr>`).join('')}</tbody></table></div><div class="note" style="margin-top:8px"><strong>If you're tracking toward Conservative by week 4:</strong> keep 10–15% of the budget unallocated until then so you can move it; cut the bottom two placements by CPL and fund the top two; lean on retargeting and lead gen forms, which convert fastest; and reset the goal with leadership early rather than at quarter end. <strong>If you're tracking toward Strong:</strong> raise budget on channels that still have room to grow (see Diminishing returns) and check sales capacity before you add spend.</div></div>
+  <div><h2 style="font-size:18px">What if one number slips</h2><div class="tscroll"><table><thead><tr><th>If…</th><th class="n">Customers</th><th class="n">CAC (all-in)</th><th class="n">Change</th><th>Early warning</th><th>What to do</th></tr></thead><tbody>
+  ${SENS.map(([n,x],i)=>{const e=econ(R,x);return `<tr><td style="min-width:150px">${n}</td><td class="n">${compact(x.cust)}</td><td class="n">${x.cust?money(e.cacF):'—'}</td><td class="n" style="white-space:nowrap">${E.cacF&&e.cacF?'+'+Math.round((e.cacF/E.cacF-1)*100)+'% CAC':'—'}</td><td class="sub2" style="min-width:150px">${FIXES[i][0]}</td><td class="sub2" style="min-width:280px">${FIXES[i][1]}</td></tr>`}).join('')}</tbody></table></div></div></div>
 
  <div><h2 style="font-size:18px">Diminishing returns by channel</h2><div class="note">Each extra dollar in a channel buys a bit less as you exhaust its best audiences. Efficiency is the share of straight-line results you still get at this spend; the last column is what the next $10K would cost per lead.</div>
   <div class="tscroll"><table><thead><tr><th>Channel</th><th class="n">Spend</th><th class="n">Efficiency</th><th class="n">Leads</th><th class="n">Avg cost per lead</th><th class="n">Next $10K: cost per lead</th><th>Room to grow</th></tr></thead><tbody>
@@ -923,7 +950,7 @@ function renderSeg(){
   b.ondrop=e=>{e.preventDefault();const from=dragK||e.dataTransfer.getData('text/plain'),to=b.dataset.k;if(!from||from===to)return;
    const ks=tabs.map(t=>t[0]).filter(k=>k!==from);ks.splice(ks.indexOf(to),0,from);UI.tabOrder=ks;save();renderOut()}});
  $('#tabs').hidden=UI.tier===3;
- $('#tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{UI.tab=b.dataset.k;save();renderOut()});
+ $('#tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{if(UI.tab===b.dataset.k||b.isContentEditable)return;UI.tab=b.dataset.k;save();renderOut()});
 }
 function barList(title,entries,total){
  const max=Math.max(1,...entries.map(e=>e[1]));
@@ -1361,7 +1388,28 @@ function renderCompare(){
 }
 const pct=v=>(+(v*100).toFixed(1))+'%';
 const money2=v=>'$'+(v<10?v.toFixed(2):Math.round(v).toLocaleString('en-US'));
-function renderOut(){
+// Double-click to edit any text in the dashboard. Edits are saved per tab, keyed by the original text and its position among identical texts,
+// so an edited number falls back to the live value once the inputs change it.
+const TE_SEL='td,th,h1,h2,h3,h4,li,summary,label,p,.note,.k,.v,.sub2,.chip,.tierchip,.eyebrow,strong,.pv-h,.pv-main,.pv-lg div,#tabs button';
+const teScope=el=>el.closest('#tabs')?'_tabs':UI.tier===3?'_compare':UI.tab;
+const teOk=el=>el&&!el.querySelector('input,select,textarea,button:not(#tabs button),a')&&!el.closest('input,select,textarea,a');
+function teKey(el){const root=el.closest('#tabs')||$('#view'),t=(el.dataset.orig??el.textContent).trim();let n=0;
+ for(const x of root.querySelectorAll(TE_SEL)){if(x===el)break;if((x.dataset.orig??x.textContent).trim()===t)n++}return t+'#'+n}
+function applyTextEdits(){for(const root of [$('#tabs'),$('#view')]){const seen={};
+  root.querySelectorAll(TE_SEL).forEach(el=>{const t=el.textContent.trim();if(!t)return;const n=seen[t]=(seen[t]??-1)+1,E=(S.textEdits||{})[teScope(el)]||{},v=E[t+'#'+n];
+   if(v!=null&&teOk(el)){el.dataset.orig=t;el.textContent=v;el.classList.add('te-edited');el.title='You edited this. Original: '+t}})}
+ const E=(S.textEdits||{})[UI.tier===3?'_compare':UI.tab];$('#te-reset').hidden=!(E&&Object.keys(E).length)}
+function teStart(el){if(el.isContentEditable)return;const key=teKey(el),scope=teScope(el),before=el.textContent;
+ el.contentEditable='true';el.classList.add('te-on');el.focus();const r=document.createRange();r.selectNodeContents(el);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);
+ const done=keep=>{el.removeEventListener('blur',onBlur);el.removeEventListener('keydown',onKey);el.contentEditable='false';el.classList.remove('te-on');
+  if(!keep){el.textContent=before;return}const v=el.textContent.trim(),orig=(el.dataset.orig??before).trim();S.textEdits=S.textEdits||{};const E=S.textEdits[scope]=S.textEdits[scope]||{};
+  if(!v||v===orig){delete E[key];el.textContent=orig;el.classList.remove('te-edited');delete el.dataset.orig;el.removeAttribute('title')}else{E[key]=v;el.dataset.orig=orig;el.classList.add('te-edited');el.title='You edited this. Original: '+orig}
+  save();$('#te-reset').hidden=!Object.keys(S.textEdits[UI.tier===3?'_compare':UI.tab]||{}).length};
+ const onBlur=()=>done(true),onKey=e=>{if(e.key===' '&&el.tagName==='BUTTON'){e.preventDefault();document.execCommand('insertText',false,' ')}else if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();el.blur()}else if(e.key==='Escape'){e.preventDefault();done(false)}};
+ el.addEventListener('blur',onBlur);el.addEventListener('keydown',onKey)}
+document.addEventListener('dblclick',e=>{const el=e.target.closest&&e.target.closest(TE_SEL);if(!el||!el.closest('#view,#tabs')||!teOk(el))return;e.preventDefault();teStart(el)});
+function renderOut(){_renderOut();applyTextEdits()}
+function _renderOut(){
  renderSeg();
  const v=$('#view');
  if(UI.tier===3){v.innerHTML=renderCompare();$('#x-csv').disabled=true;syncBudgetFields();return}
@@ -1439,6 +1487,9 @@ $('#x-xlsx').onclick=()=>{if(!window.XLSX)return setStatus('#x-status','The spre
 $('#x-all').onclick=()=>{if(!window.XLSX)return setStatus('#x-status','The spreadsheet library did not load. Reload the page and try again.',true);
  saveFile(`${slug()}-all-versions-paid-media-bom.xlsx`,XLSX.write(workbookFor([0,1,2]),{type:'array',bookType:'xlsx'}))};
 $('#x-csv').onclick=()=>saveFile(`${slug()}-${TIERS[UI.tier]}-${UI.tab}.csv`,toDelim(currentTable(),','));
+$('#x-refresh').onclick=()=>{save();renderInputs();renderOut();setStatus('#x-status','Refreshed. Every number was recalculated from your inputs at '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})+'.')};
+$('#te-reset').onclick=()=>{if(S.textEdits)delete S.textEdits[UI.tier===3?'_compare':UI.tab];save();renderOut();setStatus('#x-status','Text edits on this tab were undone.')};
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!document.activeElement?.isContentEditable)renderOut()});
 $('#x-copy').onclick=()=>{const txt=UI.tier===3?'':toDelim(currentTable(),'\t');
  navigator.clipboard.writeText(txt).then(()=>setStatus('#x-status','Copied. Paste into Excel or Google Sheets.')).catch(()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');setStatus('#x-status','Copied. Paste into Excel or Google Sheets.')}catch(e){setStatus('#x-status','Copy was blocked here.',true)}ta.remove()})};
 
@@ -1770,7 +1821,7 @@ Rules: one entry in "initiatives" per initiative above, same order. For each: 5 
 }
 
 /* ==================== BOOT ==================== */
-renderInputs();renderOut();renderAgent();
+renderInputs();renderOut();renderAgent();renderProjects();wireProjects();
 (function hook(n){
  if(window.claude&&claude.use){claude.use('downloads').then(d=>{DL=d}).catch(()=>{});claude.use('sample').then(s=>{SAMPLE=s;renderAgent();newCheer(true)}).catch(()=>{});return}
  if(n<20)setTimeout(()=>hook(n+1),250);

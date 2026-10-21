@@ -28,6 +28,17 @@
   <div class="layout">
     <!-- ============ INPUTS ============ -->
     <aside class="rail" aria-label="Inputs">
+      <details open id="d-proj">
+        <summary>Projects <span class="hint" id="pj-hint">saved in this browser</span></summary>
+        <div class="sec">
+          <label class="f">Open project<select id="pj-sel"></select></label>
+          <label class="f">Project name<input type="text" id="pj-name" placeholder="Name this plan"></label>
+          <div class="btns" style="flex-wrap:wrap"><button class="btn sm" id="pj-new">New blank project</button><button class="btn sm" id="pj-copy">Save as a copy</button><button class="btn sm ghost" id="pj-del">Delete</button></div>
+          <div class="btns" style="flex-wrap:wrap"><button class="btn sm" id="pj-export">Download backup</button><label class="btn sm" for="pj-file" tabindex="0" role="button">Open backup file</label><input type="file" id="pj-file" accept=".json,application/json" hidden></div>
+          <div class="status" id="pj-status" role="status"></div>
+          <div class="note">Every change saves to the open project on its own. Download a backup now and then: it holds all your projects in one file you can open on another computer or browser.</div>
+        </div>
+      </details>
       <details open id="d-brief">
         <summary>1 · GTM brief <span class="hint">source doc</span></summary>
         <div class="sec">
@@ -160,12 +171,14 @@
       <div class="bar">
         <div class="seg" role="group" aria-label="Version" id="ver-seg"></div>
         <div class="btns">
+          <button class="btn" id="x-refresh" title="Re-run every calculation and redraw the dashboard">↻ Refresh</button>
           <button class="btn primary" id="x-xlsx">Download .xlsx</button>
           <button class="btn" id="x-all">All versions .xlsx</button>
           <button class="btn" id="x-csv">CSV of this tab</button>
           <button class="btn ghost" id="x-copy">Copy table</button>
         </div>
       </div>
+      <div class="te-bar"><span class="sub2">Tip: double-click any text to edit it. Press Enter to save, Esc to cancel.</span><button class="btn sm ghost" id="te-reset" hidden>Undo my text edits on this tab</button></div>
       <div class="status" id="x-status" role="status"></div>
       <nav class="tabs" role="tablist" id="tabs"></nav>
       <section id="view"></section>

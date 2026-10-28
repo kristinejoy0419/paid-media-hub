@@ -134,14 +134,14 @@ const LIMS={meta_feed_img:{h:40,b:125},meta_feed_vid:{h:40,b:125},meta_reels:{b:
 const CHMAP=Object.fromEntries(CH.map(c=>[c.id,c]));
 const PLMAP={};CH.forEach(c=>c.pl.forEach(p=>PLMAP[p.id]={...p,ch:c}));
 
-/* ==================== EXAMPLE STATE (PROXY: illustrative Rubrik lead-gen plan) ==================== */
-// Proxy data only: an outside-in model of what a Rubrik paid media lead-gen plan could look like, built from public
-// information (products, buyers, events, offers). Not Rubrik's real budgets, KPIs, roadmap or results; every number is illustrative.
-const EX_NAME='PROXY · Rubrik Cyber Resilience Lead Gen FY28 (illustrative)';
-const EXAMPLE_BRIEF=`PROXY DATA. GTM Strategy: Rubrik · Cyber Resilience Lead Gen FY28 (illustrative)
-This is an outside-in proxy plan, modeled from public information about Rubrik and the data security category. Budgets, KPIs, timing and proof points are illustrative assumptions, not Rubrik's real plan or results.
+/* ==================== EXAMPLE STATE (illustrative lead-gen plan for a fictional company) ==================== */
+// Example data only: a paid media lead-gen plan for Ironvault, a fictional data security company modeled on the category
+// (buyers, events, offers). Every name and number is illustrative.
+const EX_NAME='Example · Ironvault Cyber Resilience Lead Gen FY28 (illustrative)';
+const EXAMPLE_BRIEF=`EXAMPLE DATA. GTM Strategy: Ironvault · Cyber Resilience Lead Gen FY28 (illustrative)
+Ironvault is a fictional company, modeled on the data security category. Budgets, KPIs, timing and proof points are illustrative assumptions.
 
-Solution: Rubrik Security Cloud. Back up, secure and recover data across data center, cloud, SaaS and identity: immutable backups, threat monitoring, data security posture (DSPM), identity recovery and clean, fast recovery after ransomware.
+Solution: Ironvault Data Cloud. Back up, secure and recover data across data center, cloud, SaaS and identity: immutable backups, threat monitoring, data security posture (DSPM), identity recovery and clean, fast recovery after ransomware.
 
 Program goal: pipeline. Paid media is measured on qualified meetings and sourced pipeline, not clicks.
 
@@ -157,12 +157,12 @@ Buying committee & where they learn:
 - Day-to-day user (Backup Admin, IT Ops Manager, SecOps Analyst): LinkedIn, Reddit, forums, YouTube how-tos, search / LLM search.
 Markets: North America leads; EMEA (UK, DACH, France) and Japan.
 
-Offers by stage: Rubrik Zero Labs data security report (gated); ransomware readiness assessment; live recovery demo and hands-on lab; cyber recovery workshop for SecOps and IT teams; cost-of-downtime calculator.
+Offers by stage: Ironvault Threat Labs data security report (gated); ransomware readiness assessment; live recovery demo and hands-on lab; cyber recovery workshop for SecOps and IT teams; cost-of-downtime calculator.
 
-Moments (illustrative timing): Mar ransomware readiness assessment push; Apr/May RSAC; Jun Gartner Security & Risk Summit and AWS re:Inforce; Jul Rubrik Zero Labs report; Aug Black Hat; Sep identity resilience campaign; Oct Rubrik FORWARD and Cybersecurity Awareness Month; Nov Microsoft Ignite; Dec AWS re:Invent. Ongoing: customer recovery stories, analyst recognition, partner co-marketing (Microsoft, AWS, Google Cloud, SIs), technical webinars.`;
+Moments (illustrative timing): Mar ransomware readiness assessment push; Apr/May RSAC; Jun Gartner Security & Risk Summit and AWS re:Inforce; Jul Ironvault Threat Labs report; Aug Black Hat; Sep identity resilience campaign; Oct Ironvault Summit and Cybersecurity Awareness Month; Nov Microsoft Ignite; Dec AWS re:Invent. Ongoing: customer recovery stories, analyst recognition, partner co-marketing (Microsoft, AWS, Google Cloud, SIs), technical webinars.`;
 
 function exampleState(){return{
- name:EX_NAME,product:'Rubrik Security Cloud (backup, threat monitoring, DSPM, identity recovery and clean recovery across data center, cloud and SaaS)',brief:EXAMPLE_BRIEF,
+ name:EX_NAME,product:'Ironvault Data Cloud (backup, threat monitoring, DSPM, identity recovery and clean recovery across data center, cloud and SaaS)',brief:EXAMPLE_BRIEF,
  budgets:{lean:600000,standard:1500000,full:3000000},start:'2027-02-01',end:'2028-01-31',
  markets:[
   {id:'NA',name:'North America',lang:'EN',on:true,weight:60},
@@ -182,30 +182,30 @@ function exampleState(){return{
   {name:'RSAC',month:'2027-04',type:'event',ini:0},
   {name:'Gartner Security & Risk Summit',month:'2027-06',type:'event',ini:0},
   {name:'AWS re:Inforce',month:'2027-06',type:'event',ini:2},
-  {name:'Rubrik Zero Labs data security report',month:'2027-07',type:'content',ini:0},
+  {name:'Ironvault Threat Labs data security report',month:'2027-07',type:'content',ini:0},
   {name:'Black Hat USA',month:'2027-08',type:'event',ini:0},
   {name:'Identity resilience campaign',month:'2027-09',type:'launch',ini:2},
-  {name:'Rubrik FORWARD',month:'2027-10',type:'event',ini:1},
+  {name:'Ironvault Summit',month:'2027-10',type:'event',ini:1},
   {name:'Microsoft Ignite',month:'2027-11',type:'event',ini:2},
   {name:'AWS re:Invent',month:'2027-12',type:'event',ini:2}],
  channels:Object.fromEntries(CH.map(c=>[c.id,{on:true,weight:c.weight}])),
  concepts:{lean:2,standard:3,full:4},refresh:{lean:12,standard:8,full:6},rates:{},
- formats:defaultFormats(),landing:'https://www.rubrik.com/',copy:exampleCopy(),
- // illustrative enterprise deal economics for the Growth Plan tab (assumptions, not Rubrik figures)
+ formats:defaultFormats(),landing:'https://example.com/',copy:exampleCopy(),
+ // illustrative enterprise deal economics for the Growth Plan tab (assumptions, not Ironvault figures)
  growth:{acv:120000,gm:80,life:5,agency:12,creative:150000,tools:40000,sdr:6,perSdr:150,goalType:'pipe',goal:40000000}
 };}
-function exampleCopy(){return{src:EX_NAME+' · proxy copy, illustrative proof points',
+function exampleCopy(){return{src:EX_NAME+' · example copy, illustrative proof points',
  voice:'Calm, credible and specific. Speak to security and IT leaders who expect an attack: lead with recovery time and proof, name the risk plainly, never use fear for its own sake.',
- eyebrow:'Proxy plan · illustrative\nRubrik Zero Labs report\nRansomware readiness assessment',
+ eyebrow:'Proxy plan · illustrative\nIronvault Threat Labs report\nRansomware readiness assessment',
  ctas:'Get your readiness assessment\nBook a recovery demo\nGet the report\nTry the hands-on lab\nRegister now',
  proof:'Illustrative: a regional bank restored critical systems in 4 hours during a ransomware drill\nIllustrative: a hospital network cut backup admin time 60% after replacing legacy backup\nIllustrative: a retailer protected Microsoft 365, cloud and identity from one console in 30 days',
  ini:[
   {h:'Recover in hours, not weeks\nAssume breach. Recover fast.\nRansomware will hit. Be ready.\nClean recovery, proven\nYour last line of defense',
-   b:'Backups attackers cannot touch.\nRubrik combines immutable backups, threat monitoring and clean recovery, so ransomware does not mean weeks of downtime.\nIllustrative: a regional bank restored critical systems in 4 hours during a ransomware drill.'},
+   b:'Backups attackers cannot touch.\nIronvault combines immutable backups, threat monitoring and clean recovery, so ransomware does not mean weeks of downtime.\nIllustrative: a regional bank restored critical systems in 4 hours during a ransomware drill.'},
   {h:'How fast could you recover?\nGet a free readiness review\nSee a live recovery demo\nTest your ransomware plan',
-   b:'Find your recovery gaps.\nA free ransomware readiness assessment shows how long recovery would really take, and what to fix first.\nBook a 30-minute Rubrik demo and watch a full restore from a simulated attack.'},
+   b:'Find your recovery gaps.\nA free ransomware readiness assessment shows how long recovery would really take, and what to fix first.\nBook a 30-minute Ironvault demo and watch a full restore from a simulated attack.'},
   {h:'Secure cloud and SaaS data\nRecover identity, too\nOne platform, every workload\nData security beyond backup',
-   b:'Cover cloud, SaaS and identity in one place.\nExtend Rubrik to cloud, Microsoft 365 and identity from the console you already use.\nSee where sensitive data lives, who can reach it, and recover it if it is hit.'}]};}
+   b:'Cover cloud, SaaS and identity in one place.\nExtend Ironvault to cloud, Microsoft 365 and identity from the console you already use.\nSee where sensitive data lives, who can reach it, and recover it if it is hit.'}]};}
 function blankPersonas(){return {dm:{label:'Decision-maker',on:true},tech:{label:'Technical influencer',on:true},user:{label:'Day-to-day user',on:true}}}
 function blankState(){const yr=new Date().getFullYear()+1;return{
  name:'',product:'',brief:'',budgets:{lean:250000,standard:500000,full:1000000},start:yr+'-01-01',end:yr+'-12-31',
@@ -216,14 +216,16 @@ function blankState(){const yr=new Date().getFullYear()+1;return{
 function defaultFormats(){return Object.fromEntries(FORMATS.map(f=>[f.id,{on:true}]).concat([['_video',{lengths:'15s, 30s'}]]))}
 
 const LSKEY='paid-media-hub-v1';
-let S;try{S=JSON.parse(localStorage.getItem(LSKEY)||'null')}catch(e){S=null}
+// plans saved before the example became fictional still carry the old company name; rename it on load
+const unRubrik=t=>t&&t.replace(/https:\/\/www\.rubrik\.com\//g,'https://example.com/').replace(/PROXY · Rubrik/g,'Example · Ironvault').replace(/PROXY DATA\./g,'EXAMPLE DATA.').replace(/ · proxy copy/g,' · example copy').replace(/Rubrik Security Cloud/g,'Ironvault Data Cloud').replace(/Rubrik Zero Labs/g,'Ironvault Threat Labs').replace(/Rubrik FORWARD/g,'Ironvault Summit').replace(/Rubrik/g,'Ironvault');
+let S;try{S=JSON.parse(unRubrik(localStorage.getItem(LSKEY))||'null')}catch(e){S=null}
 if(!S||!S.markets)S=exampleState();
 if(!S.formats)S.formats=defaultFormats();if(!S.formats._video)S.formats._video={lengths:'15s, 30s'};if(S.landing==null)S.landing='https://example.com/';if(!S.copy)S.copy=exampleCopy();if(S.copy.eyebrow==null&&S.copy.src===EX_NAME)S.copy.eyebrow=exampleCopy().eyebrow;if(S.copy.src==null&&S.name===EX_NAME)S.copy.src=S.name;
 let UI={tier:1,tab:'summary',group:'channel',mvp:'master'};
 try{Object.assign(UI,JSON.parse(localStorage.getItem(LSKEY+'-ui')||'{}'))}catch(e){}
 // Projects: every plan lives in a library in this browser; the open one autosaves. Backups are one JSON file with every project.
 const PJKEY=LSKEY+'-projects';
-const pjAll=()=>{try{return JSON.parse(localStorage.getItem(PJKEY)||'{}')||{}}catch(e){return {}}};
+const pjAll=()=>{try{return JSON.parse(unRubrik(localStorage.getItem(PJKEY))||'{}')||{}}catch(e){return {}}};
 const pjPut=P=>{try{localStorage.setItem(PJKEY,JSON.stringify(P));return true}catch(e){return false}};
 const pjId=()=>'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 let PJ_ERR=false;

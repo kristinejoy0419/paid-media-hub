@@ -2,7 +2,7 @@
 
 Turns a GTM strategy doc into a paid media plan: a bill of materials (BOM), a creative spec sheet, a line-by-line agency trafficking and tagging sheet, and monthly flighting. It builds Low, Medium and High versions of each, plus a side-by-side comparison.
 
-It opens pre-filled with a **proxy** worked example: an illustrative, outside-in lead-gen plan for Rubrik, built only from public information. Its budgets, KPIs, timing and proof points are assumptions, not Rubrik's real plan or results.
+It opens pre-filled with a worked example: an illustrative lead-gen plan for Ironvault, a fictional data security company. Its budgets, KPIs, timing and proof points are assumptions.
 
 ## Run it
 
